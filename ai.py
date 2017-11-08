@@ -99,7 +99,7 @@ class Dqn():
     def save(self):
         torch.save({'state_dict': self.model.state_dict(),
                     'optimizer' : self.optimizer.state_dict(),
-                   }, 'last_brain.pth')
+                   }, 'last_brain2.pth')
     
     def load(self):
         if os.path.isfile('last_brain.pth'):

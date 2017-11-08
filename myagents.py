@@ -309,6 +309,9 @@ class AgentRealistic:
         self.solution_report.setMissionSeed(self.mission_seed)
         self.last_reward = 0
         self.accumulative_reward = 0
+        self.brain = Dqn(2, len(self.AGENT_ALLOWED_ACTIONS), 0.9)
+        self.brain.load()
+
 
     #----------------------------------------------------------------------------------------------------------------#       
     def __ExecuteActionForRealisticAgentWithNoisyTransitionModel__(self, idx_requested_action, noise_level):
@@ -347,7 +350,6 @@ class AgentRealistic:
         self.agent_host.setRewardsPolicy(MalmoPython.RewardsPolicy.KEEP_ALL_REWARDS)
 
         state_t = self.agent_host.getWorldState()
-        brain = Dqn(2, len(self.AGENT_ALLOWED_ACTIONS), 0.9)
         first = True
         # -- Get a state-space model by observing the Orcale/GridObserver--#
         while state_t.is_mission_running:
@@ -373,10 +375,10 @@ class AgentRealistic:
             last_signal = [xpos, ypos]
 
 
-            # print("\nhehehehehheheheheheheheh:\n{0}\n".format(last_signal))
-            action = brain.update(self.last_reward, last_signal)
+            action = self.brain.update(self.last_reward, last_signal)
             print("Requested Action:", self.AGENT_ALLOWED_ACTIONS[action])
             self.__ExecuteActionForRealisticAgentWithNoisyTransitionModel__(action, 0.3)
+            self.solution_report.action_count = self.solution_report.action_count + 1
             for reward_t in state_t.rewards:
                 partialReward += reward_t.getValue()
                 #self.last_reward = reward_t.getValue()
@@ -388,11 +390,7 @@ class AgentRealistic:
             print("Last Reward:{0}".format(partialReward))
             self.last_reward = partialReward
             partialReward = 0
-
-
-
-
-
+            
 
         return
  
@@ -802,23 +800,24 @@ if __name__ == "__main__":
     for i_training_seed in range(0,args.missionseedmax):
         
         #-- Observe the full state space a prior i (only allowed for the simple agent!) ? --#
-        if args.agentname.lower()=='helper':  
+        if args.agentname.lower()=='helper':
             print('Get state-space representation using a AgentHelper...[note in v0.30 there is now an faster way of getting the state-space ]')            
             helper_solution_report = SolutionReport()
             helper_agent = AgentHelper(agent_host,args.malmoport,args.missiontype,i_training_seed, helper_solution_report, None)
             helper_agent.run_agent()
         else:
+            helper_agent = None
+        """else:
             if args.agentname.lower()=='realistic':
                 print('Get state-space representation using a AgentRealistic...[note in v0.30 there is now an faster way of getting the state-space ]')
                 helper_solution_report = SolutionReport()
                 helper_agent = AgentRealistic(agent_host, args.malmoport, args.missiontype, i_training_seed, helper_solution_report, None)
-                helper_agent.run_agent()
+
             elif args.agentname.lower()=='random':
                 print(
                 'Get state-space representation using a AgentRandom...[note in v0.30 there is now an faster way of getting the state-space ]')
                 helper_solution_report = SolutionReport()
-                helper_agent = AgentRandom(agent_host, args.malmoport, args.missiontype, i_training_seed, helper_solution_report, None)
-                helper_agent.run_agent()
+                helper_agent = AgentRandom(agent_host, args.malmoport, args.missiontype, i_training_seed, helper_solution_report, None)"""
 
         
         #-- Repeat the same instance (size and seed) multiple times --#
@@ -864,6 +863,12 @@ if __name__ == "__main__":
             print('Sleep a sec to make sure the client is ready for next mission/agent variation...')            
             time.sleep(1)
             print("------------------------------------------------------------------------------\n")
+            if isinstance(agent_to_be_evaluated, AgentRealistic):
+                print("score form brain:{0}".format(agent_to_be_evaluated.brain.score()))
+                agent_to_be_evaluated.brain.save()
+
+
+
 
     print("Done")
 
