@@ -1,11 +1,14 @@
-# Malmo Deep Q-Learning #
+## Needs a quick tidy up; ie removing Bjørn's spec and pairing back to our own - Niall
 
-Malmo is a platform provided by Microsoft to design, build, and evaluate an intelligent agent. Using deep Q-learning, it has been tried to design an agent that can find its way in a maze.
+
+# Malmo Deep Q-Learning
+
+Malmo is a platform provided by Microsoft (forked from their popular Minecraft videogame) to design, build, and evaluate an intelligent agent. Using deep Q-learning, we have designed an agent that can find its way autonomously through a given maze.
 
 ## Getting Started
 
-These instructions will get you a copy of the project up and run on your local machine for development and testing purposes. See instruction to deploy the project on a live system.
- 
+These instructions will get you a copy of the project up and running on your local machine for development and testing purposes. Please see further instructions below on how to deploy the project on a live system.
+
 ### Prerequisites
 
 You need to know some basic concepts in reinforcement learning and neural networks. Try to familiarize yourself with neural nets, backpropagation, reinforcement learning, Q-learning, and memory replay. For this project, python 2.7 and macOS Sierra are used. Also, to implement neural nets, the Pytorch framework is considered.
@@ -31,15 +34,15 @@ cd Path_to_Your_Working_Directory/Malmo-0.17.0-Mac-64bit/Minecraft
 
 1. Installing Pytorch:
 ```
-/usr/bin/python -m pip install http://download.pytorch.org/whl/torch-0.2.0.post3-cp27-none-macosx_10_7_x86_64.whl 
+/usr/bin/python -m pip install http://download.pytorch.org/whl/torch-0.2.0.post3-cp27-none-macosx_10_7_x86_64.whl
 ```
 2. Installing Numpy:
 ```
-/usr/bin/python -m pip install numpy 
+/usr/bin/python -m pip install numpy
 ```
 3. Installing matplotlib:
 ```
-/usr/bin/python -m pip install matplotlib 
+/usr/bin/python -m pip install matplotlib
 ```
 
 #### Initialize some variables in myagent.py
@@ -67,7 +70,7 @@ for running the myagents.py there are some parameters that can be passed to the 
 1. "-a" , "--agentname": select agent type ("Helper", "Realistic", "Random")
 2. "-t" , "--missiontype": mission type ("small","medium","large")
 3. "-s" , "--missionseedmax": it is used to randomly generate a maze (integer)
-4. "-n" , "--nrepeats": number of episods (if stochastic behavior)
+4. "-n" , "--nrepeats": number of episodes (if stochastic behavior)
 
 All the options above are optional and in the case, they are not provided default values will be used.
 
