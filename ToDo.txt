@@ -1,0 +1,14 @@
+Ensure code is implemented correctly;
+  - Add time collection variables, on top of outputting to csv, for plotting with matplotlib etc.
+  - Add kill time/reward if required.
+
+Experimentation;
+  - As a base line, observe performance of Random and Simple agents, on each map size.
+  - For x iterations, train agent(s) on each map sizes.
+  - For x iterations, train agent(s) on single map size, with varying degree of random move choice (q-value?).
+  - Optional: simple q-learning vs neural q-learning.
+
+Report/Submission;
+  - Should probably sit down as a group and co-write the bulk of the report.
+  - Clean up code, ensure comments are relevant and concise.
+  - Gather data visualizations (matplotlib, could even use Tableau)
