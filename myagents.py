@@ -386,6 +386,7 @@ class AgentRealistic:
             action = self.brain.update(self.last_reward, last_signal)
             print("Requested Action:", self.AGENT_ALLOWED_ACTIONS[action])
             self.__ExecuteActionForRealisticAgentWithNoisyTransitionModel__(action, 0.3)
+            #time.sleep(0.002)
             self.solution_report.action_count = self.solution_report.action_count + 1
             for reward_t in state_t.rewards:
                 partialReward += reward_t.getValue()
@@ -834,7 +835,11 @@ if __name__ == "__main__":
 
 
         #-- Repeat the same instance (size and seed) multiple times --#
-            run_instances = 0
+        run_instances = 0
+        
+        cumulativeRewards = []
+        timings = []
+        
 
         for i_rep in range(0,args.nrepeats):
             print('Setup the performance log...')
@@ -870,9 +875,13 @@ if __name__ == "__main__":
 
             #-- Outputs raw result data in CSV form to text file for each instance for analsysis and graphing
             ## Mohammed & Jack can you just double check the output works for you
+
+            cumulativeRewards.append(solution_report.reward_cumulative)
+
             file = open(str(agent_name) + " TestResults.txt", "a")
+            
             # Outputs counter for instance of agent in loop, time taken, reward, and no of actions required.
-            file.write(run_instances + "," + ((solution_report.end_datetime_wallclock-solution_report.start_datetime_wallclock).total_seconds()) + "," + solution_report.reward_cumulative + "," + solution_report.action_count + "\n")
+            file.write(str(run_instances) + "," + str(((solution_report.end_datetime_wallclock-solution_report.start_datetime_wallclock).total_seconds())) + "," + str(solution_report.reward_cumulative) + "," + str(solution_report.action_count) + "\n")
             file.close()
             print('Instance report saved for later analysis and reporting')
 
@@ -882,6 +891,12 @@ if __name__ == "__main__":
             if isinstance(agent_to_be_evaluated, AgentRealistic):
                 print("score form brain:{0}".format(agent_to_be_evaluated.brain.score()))
                 agent_to_be_evaluated.brain.save()
+
+        plt.plot(cumulativeRewards)
+        plt.ylabel('cumulative rewards')
+        plt.savefig("{0}.pdf".format(args.nrepeats))
+        plt.show()
+
 
 
 
