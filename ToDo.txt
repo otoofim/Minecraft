@@ -3,8 +3,8 @@ Ensure code is implemented correctly;
   - Add kill time/reward if required.
 
 Experimentation;
-  - As a base line, observe performance of Random and Simple agents, on each map size.
-  - For x iterations, train agent(s) on each map sizes.
+  - As a base line, observe performance of all three agents, on a single map size.
+  - For x iterations, train agent(s) on each map sizes, and compare performance. 
   - For x iterations, train agent(s) on single map size, with varying degree of random move choice (q-value?).
   - Optional: simple q-learning vs neural q-learning.
 
