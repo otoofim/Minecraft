@@ -379,14 +379,14 @@ class AgentRealistic:
                 yaw = oracle_and_internal.get(u'Yaw', 1)  # What is it? Lateral Movement of agent (ans by Niall!)
                 pitch = oracle_and_internal.get(u'Pitch', 1)
 
-            last_signal = [xpos, zpos, ypos, yaw, pitch]
+            #last_signal = [xpos, zpos, ypos, yaw, pitch]
             last_signal = [xpos, ypos]
 
 
             action = self.brain.update(self.last_reward, last_signal)
             print("Requested Action:", self.AGENT_ALLOWED_ACTIONS[action])
-            self.__ExecuteActionForRealisticAgentWithNoisyTransitionModel__(action, 0.3)
-            #time.sleep(0.002)
+            self.__ExecuteActionForRealisticAgentWithNoisyTransitionModel__(action, 0.1)
+            time.sleep(0.02)
             self.solution_report.action_count = self.solution_report.action_count + 1
             for reward_t in state_t.rewards:
                 partialReward += reward_t.getValue()

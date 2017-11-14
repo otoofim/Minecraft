@@ -58,19 +58,26 @@ class Dqn():
         self.reward_window = []
         self.model = Network(input_size, nb_action)
         self.memory = ReplayMemory(100000)
-        self.optimizer = optim.Adam(self.model.parameters(), lr = 0.005)
+        self.optimizer = optim.Adam(self.model.parameters(), lr = 0.001)
         self.last_state = torch.Tensor(input_size).unsqueeze(0)
         self.last_action = 0
         self.last_reward = 0
 
     def select_action(self, state):
+        # In tensors, computational graph and gradients are included. However, it is not required to use them to compute probability distributions with softmax. To prevent computational graph and gradients to be included Volatile is set to "True".
         probs = F.softmax(self.model(Variable(state, volatile = True), False)*100) # Default calibrated to T=100
-        #x = random.uniform(0, 1)
-            #if x < 0.7:
-            #action = tf.argmax(probs[])
         
-        action = probs.multinomial()
-        return action.data[0,0]
+        #epsilon greedy strategy
+        x = random.uniform(0, 1)
+        if x < 0.9:
+            _, temp = torch.max(probs[0], 0)
+            action = temp.data[0]
+        else:
+
+            action = random.randint(0, 3)
+
+        #action = probs.multinomial().data[0,0]
+        return action
 
     def learn(self, batch_state, batch_next_state, batch_reward, batch_action):
         outputs = self.model(batch_state).gather(1, batch_action.unsqueeze(1)).squeeze(1)
@@ -102,7 +109,7 @@ class Dqn():
     def save(self):
         torch.save({'state_dict': self.model.state_dict(),
                     'optimizer' : self.optimizer.state_dict(),
-                   }, 'last_brain2.pth')
+                   }, 'last_brain.pth')
 
     def load(self):
         if os.path.isfile('last_brain.pth'):
