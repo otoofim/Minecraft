@@ -343,7 +343,7 @@ class AgentRealistic:
         time.sleep(1)
 
 
-#Potential Deltion of comment?        vvvv
+        #Potential Deltion of comment?        vvvv
 
         # INSERT YOUR SOLUTION HERE (REWARDS MUST BE UPDATED IN THE solution_report)
         #
@@ -353,9 +353,9 @@ class AgentRealistic:
         #       ExecuteActionForRealisticAgentWithNoisyTransitionModel(idx_requested_action, 0.0)
 
         # -- Define local capabilities of the agent (sensors)--#
-        self.agent_host.setObservationsPolicy(MalmoPython.ObservationsPolicy.LATEST_OBSERVATION_ONLY)
-        self.agent_host.setVideoPolicy(MalmoPython.VideoPolicy.LATEST_FRAME_ONLY)
-        self.agent_host.setRewardsPolicy(MalmoPython.RewardsPolicy.KEEP_ALL_REWARDS)
+        #self.agent_host.setObservationsPolicy(MalmoPython.ObservationsPolicy.LATEST_OBSERVATION_ONLY)
+        #self.agent_host.setVideoPolicy(MalmoPython.VideoPolicy.LATEST_FRAME_ONLY)
+        #self.agent_host.setRewardsPolicy(MalmoPython.RewardsPolicy.KEEP_ALL_REWARDS)
 
         state_t = self.agent_host.getWorldState()
         first = True
@@ -365,8 +365,6 @@ class AgentRealistic:
             if first:
                 time.sleep(2)
                 first = False
-        #time.sleep(0.3)
-
              # -- Basic map --#
             state_t = self.agent_host.getWorldState()  # What is the difference between this line with line 544????????????????????
             if state_t.number_of_observations_since_last_state > 0:
@@ -415,6 +413,8 @@ class AgentSimple:
         """ Constructor for the simple agent """
         self.AGENT_MOVEMENT_TYPE = 'Discrete' # Note - See comment @ Line 292
         self.AGENT_NAME = 'Simple'
+        self.AGENT_ALLOWED_ACTIONS = ["movenorth 1", "movesouth 1", "movewest 1", "moveeast 1"]
+
 
         self.agent_host = agent_host
         self.agent_port = agent_port
@@ -424,6 +424,85 @@ class AgentSimple:
         self.solution_report = solution_report;
         self.solution_report.setMissionType(self.mission_type)
         self.solution_report.setMissionSeed(self.mission_seed)
+    
+    def __ExecuteActionForRandomAgentWithNoisyTransitionModel__(self, idx_request_action, noise_level):
+        """ Creates a well-defined transition model with a certain noise level """
+        n = len(self.AGENT_ALLOWED_ACTIONS)
+        pp = noise_level/(n-1) * np.ones((n,1))
+        pp[idx_request_action] = 1.0 - noise_level
+        idx_actual = np.random.choice(n, 1, p=pp.flatten()) # sample from the distrbution of actions
+        actual_action = self.AGENT_ALLOWED_ACTIONS[int(idx_actual)]
+        self.agent_host.sendCommand(actual_action)
+        return actual_action
+
+    
+    def heuristic(self, node, goal, grid):
+        curr_x = grid[node][0]
+        curr_y = grid[node][0]
+        goal_x = goal[0]
+        goal_y = goal[1]
+        return abs(curr_x - goal_x) + abs(curr_y - goal_y)
+    
+    def direction(self, current, chosen):
+        if chosen[0] > current[0]:
+            return 3
+        if chosen[0] < current[0]:
+            return 2
+        if chosen[1] > current[1]:
+            return 1
+        if chosen[1] < current[1]:
+            return 0
+
+    def a_star_search(self, grid, transitions, goal, goalCoord, start):
+
+        explored = []
+        path_cost = 0
+        
+        came_from = {}
+        current_node_cost={}
+        
+        frontier = []
+        frontier.append(start)
+        
+        for node in grid:
+            current_node_cost[node] = 100000
+        
+        current_node_cost[start] = 0
+
+        while (len(frontier) > 0):
+            
+            frontier = sorted(frontier, key=lambda node: current_node_cost[node] + self.heuristic(node, goalCoord, grid))
+            frontier.reverse()
+
+            current = frontier.pop()
+            
+            
+            if (current == goal):
+                break
+
+            explored.append(current)
+
+            for node in transitions[current]:
+                
+                if (node in explored):
+                    continue
+                
+                if (node not in frontier):
+                    frontier.append(node)
+                
+                node_path_cost = current_node_cost[current] + 1
+                if node_path_cost >= current_node_cost[node]:
+                    continue
+
+                came_from[node] = current
+                current_node_cost[node] = node_path_cost
+
+        path = [current]
+        while(current in came_from):
+            current = came_from[current]
+            path.append(current)
+        
+        return path
 
     def run_agent(self):
         """ Run the Simple agent and log the performance and resource use """
@@ -434,7 +513,84 @@ class AgentSimple:
         self.solution_report.setMissionXML(mission_xml)
         time.sleep(1)
         self.solution_report.start()
+        
 
+        grid = deepcopy(self.state_space.state_locations)
+        transitions = deepcopy(self.state_space.state_actions)
+        
+        initialState = deepcopy(self.state_space.start_id)
+        initialCoord = deepcopy(self.state_space.start_loc)
+        goalState = deepcopy(self.state_space.goal_id)
+        goalCoord = deepcopy(self.state_space.goal_loc)
+        
+        reward_cumulative = 0
+        
+        state_t = self.agent_host.getWorldState()
+        
+        path = self.a_star_search(grid, transitions, goalState, goalCoord, initialState)
+        print(path)
+
+        current = grid[path.pop()]
+        print(current)
+        
+        while state_t.is_mission_running and len(path) > 0:
+            
+            time.sleep(0.5)
+            
+            # Get the world state
+            state_t = self.agent_host.getWorldState()
+            
+            new = grid[path.pop()]
+            
+            move = self.direction(current, new)
+            
+            print("Requested Action:",self.AGENT_ALLOWED_ACTIONS[move])
+            actual_action = self.__ExecuteActionForRandomAgentWithNoisyTransitionModel__(move, 0);
+            
+            current = new
+
+            for reward_t in state_t.rewards:
+                reward_cumulative += reward_t.getValue()
+                self.solution_report.addReward(reward_t.getValue(), datetime.datetime.now())
+                print("Reward_t:",reward_t.getValue())
+                print("Cummulative reward so far:",reward_cumulative)
+            
+            # Check if anything went wrong along the way
+            for error in state_t.errors:
+                print("Error:",error.text)
+    
+            # Handling of the sensor input
+            xpos = None
+            ypos = None
+            zpos = None
+            yaw  = None
+            pitch = None
+            if state_t.number_of_observations_since_last_state > 0: # Has any Oracle-like and/or internal sensor observations come in?
+                msg = state_t.observations[-1].text      # Get the detailed for the last observed state
+                oracle = json.loads(msg)                 # Parse the Oracle JSON
+                
+                # GPS-like sensor
+                xpos = oracle.get(u'XPos', 0)            # Position in 2D plane, 1st axis
+                zpos = oracle.get(u'ZPos', 0)            # Position in 2D plane, 2nd axis (yes Z!)
+                ypos = oracle.get(u'YPos', 0)            # Height as measured from surface! (yes Y!)
+                
+                # Standard "internal" sensory inputs
+                yaw  = oracle.get(u'Yaw', 0)             # Yaw
+                pitch = oracle.get(u'Pitch', 0)          # Pitch
+            
+            # Vision
+            if state_t.number_of_video_frames_since_last_state > 0: # Have any Vision percepts been registred ?
+                frame = state_t.video_frames[0]
+        
+            #-- Print some of the state information --#
+            print("Percept: video,observations,rewards received:",state_t.number_of_video_frames_since_last_state,state_t.  number_of_observations_since_last_state,state_t.number_of_rewards_since_last_state)
+            print("\tcoordinates (x,y,z,yaw,pitch):" + str(xpos) + " " + str(ypos) + " " + str(zpos)+ " " + str(yaw) + " " + str(pitch))
+
+        # --------------------------------------------------------------------------------------------
+        # Summary
+        print("Summary:")
+        print("Cumulative reward = " + str(reward_cumulative) )
+        
         return
 
 #--------------------------------------------------------------------------------------
@@ -498,7 +654,7 @@ class AgentRandom:
                 print("Requested Action:",self.AGENT_ALLOWED_ACTIONS[actionIdx])
 
                 # Now try to execute the action given a noisy transition model
-                actual_action = self.__ExecuteActionForRandomAgentWithNoisyTransitionModel__(actionIdx, 0.05);
+                actual_action = self.__ExecuteActionForRandomAgentWithNoisyTransitionModel__(actionIdx, 0);
                 print("Actual Action:",actual_action)
 
             # Collect the number of rewards and add to reward_cumulative
@@ -693,6 +849,10 @@ class AgentHelper:
                 self.state_space.start_loc = loc_start
                 self.state_space.goal_id  = state_goal_id
                 self.state_space.goal_loc = loc_goal
+        
+                #print(self.state_space.state_locations)
+        
+        
 
 #-- Decide upon removal of this comment/option vvvvv
             #-- Reward location and values --#
@@ -814,7 +974,7 @@ if __name__ == "__main__":
     for i_training_seed in range(0,args.missionseedmax):
 
         #-- Observe the full state space a prior i (only allowed for the simple agent!) ? --#
-        if args.agentname.lower()=='helper':
+        if args.agentname.lower()=='helper' or args.agentname.lower()=='simple':
             print('Get state-space representation using a AgentHelper...[note in v0.30 there is now an faster way of getting the state-space ]')
             helper_solution_report = SolutionReport()
             helper_agent = AgentHelper(agent_host,args.malmoport,args.missiontype,i_training_seed, helper_solution_report, None)
