@@ -13,6 +13,7 @@ from torch.autograd import Variable
 # Creating the architecture of the Neural Network
 class Network(nn.Module):
 
+    #Iitialising neural network
     def __init__(self, input_size, nb_action):
         super(Network, self).__init__()
         self.input_size = input_size
@@ -23,7 +24,8 @@ class Network(nn.Module):
         #-- Not used as this is designed for implementing an extra dimension, but we only require 2D here
         #self.fc3 = nn.Linear(30, 30)
         self.fc4 = nn.Linear(30, nb_action)
-
+    
+    #To increase and decrease number of layers, it can be altered by commenting or uncommentign lines below
     def forward(self, state, tra=True):
         x1 = F.relu(self.fc1(state))
         x2 = F.relu(self.fc2(x1))
@@ -62,7 +64,7 @@ class Dqn():
         self.last_state = torch.Tensor(input_size).unsqueeze(0)
         self.last_action = 0
         self.last_reward = 0
-
+    #Selecting an action for a state
     def select_action(self, state):
         # In tensors, computational graph and gradients are included. However, it is not required to use them to compute probability distributions with softmax. To prevent computational graph and gradients to be included Volatile is set to "True".
         probs = F.softmax(self.model(Variable(state, volatile = True), False)*100) # Default calibrated to T=100
@@ -79,6 +81,7 @@ class Dqn():
         #action = probs.multinomial().data[0,0]
         return action
 
+    #Implementing learning process
     def learn(self, batch_state, batch_next_state, batch_reward, batch_action):
         outputs = self.model(batch_state).gather(1, batch_action.unsqueeze(1)).squeeze(1)
         next_outputs = self.model(batch_next_state).detach().max(1)[0]
@@ -87,7 +90,7 @@ class Dqn():
         self.optimizer.zero_grad()
         td_loss.backward(retain_variables = True)
         self.optimizer.step()
-
+    #Updating the network based on new state and reward
     def update(self, reward, new_signal):
         new_state = torch.Tensor(new_signal).float().unsqueeze(0)
         self.memory.push((self.last_state, new_state, torch.LongTensor([int(self.last_action)]), torch.Tensor([self.last_reward])))
@@ -102,15 +105,15 @@ class Dqn():
         if len(self.reward_window) > 1000:
             del self.reward_window[0]
         return action
-
+    #Returning ave of rewards in a episod.
     def score(self):
         return sum(self.reward_window)/(len(self.reward_window)+1.)
-
+    #Saves the neural network weights.
     def save(self):
         torch.save({'state_dict': self.model.state_dict(),
                     'optimizer' : self.optimizer.state_dict(),
                    }, 'last_brain.pth')
-
+    #Loading current saved neural network.
     def load(self):
         if os.path.isfile('last_brain.pth'):
             print("=> loading checkpoint... ")

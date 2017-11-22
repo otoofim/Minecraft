@@ -854,7 +854,7 @@ class AgentHelper:
         
         
 
-#-- Decide upon removal of this comment/option vvvvv
+            #-- Decide upon removal of this comment/option vvvvv
             #-- Reward location and values --#
             # OPTIONAL: If you want to account for the intermediate rewards
             # in the Random/Simple agent (or in your analysis) you can
