@@ -33,10 +33,10 @@ cd Path_to_Your_Working_Directory/Malmo-0.17.0-Mac-64bit/Minecraft
 ```
 /usr/bin/python -m pip install http://download.pytorch.org/whl/torch-0.2.0.post3-cp27-none-macosx_10_7_x86_64.whl
 ```
-	1.1. Pytorch can be installed on Windows like below:
-	```
-	conda install -c peterjc123 pytorch 
-	```
+1.1. Pytorch can be installed on Windows like below:
+```
+conda install -c peterjc123 pytorch 
+```
 2. Installing Numpy:
 ```
 /usr/bin/python -m pip install numpy
