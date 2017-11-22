@@ -1,7 +1,4 @@
-## Needs a quick tidy up; ie removing Bjørn's spec and pairing back to our own - Niall
-
-
-# Malmo Deep Q-Learning
+# Malmo Q-Learning with function approximation
 
 Malmo is a platform provided by Microsoft (forked from their popular Minecraft videogame) to design, build, and evaluate an intelligent agent. Using deep Q-learning, we have designed an agent that can find its way autonomously through a given maze.
 
@@ -36,6 +33,10 @@ cd Path_to_Your_Working_Directory/Malmo-0.17.0-Mac-64bit/Minecraft
 ```
 /usr/bin/python -m pip install http://download.pytorch.org/whl/torch-0.2.0.post3-cp27-none-macosx_10_7_x86_64.whl
 ```
+	1.1. Pytorch can be installed on Windows like below:
+	```
+	conda install -c peterjc123 pytorch 
+	```
 2. Installing Numpy:
 ```
 /usr/bin/python -m pip install numpy
@@ -52,7 +53,7 @@ cd Path_to_Your_Working_Directory/Malmo-0.17.0-Mac-64bit/Minecraft
 ```
 cd Path_to_Your_Working_Directory/Malmo-0.17.0-Mac-64bit/Python_Examples
 
-git clone https://github.com/otoofim/Malmo.git
+git clone https://moh1371@bitbucket.org/moh1371/minecraft.git
 ```
 2. Open myagents.py and change line 727. It is a variable called DEFAULT_MALMO_PATH which holds Malmo directory. So, just change it to where you have already put Malmo:
 ```
@@ -77,5 +78,5 @@ All the options above are optional and in the case, they are not provided defaul
 While Minecraft is being run, open a new terminal and enter the following commands in the terminal:
 ```
 cd Path_to_Your_Working_Directory/Malmo-0.17.0-Mac-64bit/Python_Examples
-/usr/bin/python myagents.py -a Realistic
+/usr/bin/python myagents.py -a Realistic -n NUM-OF-EPISODS
 ```
