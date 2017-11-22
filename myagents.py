@@ -8,12 +8,6 @@
  Niall Morley           (Reg 2356240)
 
  Tested with Python 2.7
-
-#hardware?#
-#other dev/exec notes#
-#MacOS (due to software constraints)?#
-
- Solution Template (revision b, 8 Nov - added print out to csv for processing, tidied code)
 """
 
 #----------------------------------------------------------------------------------------------------------------#
@@ -342,31 +336,15 @@ class AgentRealistic:
         self.solution_report.start()
         time.sleep(1)
 
-
-        #Potential Deltion of comment?        vvvv
-
-        # INSERT YOUR SOLUTION HERE (REWARDS MUST BE UPDATED IN THE solution_report)
-        #
-        # NOTICE: YOUR FINAL AGENT MUST MAKE USE OF THE FOLLOWING NOISY TRANSISION MODEL
-        #       ExecuteActionForRealisticAgentWithNoisyTransitionModel(idx_requested_action, 0.05)
-        #   FOR DEVELOPMENT IT IS RECOMMENDED TO FIST USE A NOISE FREE VERSION, i.e.
-        #       ExecuteActionForRealisticAgentWithNoisyTransitionModel(idx_requested_action, 0.0)
-
-        # -- Define local capabilities of the agent (sensors)--#
-        #self.agent_host.setObservationsPolicy(MalmoPython.ObservationsPolicy.LATEST_OBSERVATION_ONLY)
-        #self.agent_host.setVideoPolicy(MalmoPython.VideoPolicy.LATEST_FRAME_ONLY)
-        #self.agent_host.setRewardsPolicy(MalmoPython.RewardsPolicy.KEEP_ALL_REWARDS)
-
         state_t = self.agent_host.getWorldState()
         first = True
         # -- Get a state-space model by observing the Orcale/GridObserver--#
         while state_t.is_mission_running:
-          #for _ in xrange(10):
             if first:
                 time.sleep(2)
                 first = False
              # -- Basic map --#
-            state_t = self.agent_host.getWorldState()  # What is the difference between this line with line 544????????????????????
+            state_t = self.agent_host.getWorldState()  
             if state_t.number_of_observations_since_last_state > 0:
                 msg = state_t.observations[-1].text  # Get the details for the last observed state
                 oracle_and_internal = json.loads(msg)  # Parse the Oracle JSON
@@ -374,7 +352,7 @@ class AgentRealistic:
                 xpos = oracle_and_internal.get(u'XPos', 1)
                 zpos = oracle_and_internal.get(u'ZPos', 1)
                 ypos = oracle_and_internal.get(u'YPos', 1)
-                yaw = oracle_and_internal.get(u'Yaw', 1)  # What is it? Lateral Movement of agent (ans by Niall!)
+                yaw = oracle_and_internal.get(u'Yaw', 1)  
                 pitch = oracle_and_internal.get(u'Pitch', 1)
 
             #last_signal = [xpos, zpos, ypos, yaw, pitch]
@@ -389,8 +367,6 @@ class AgentRealistic:
             for reward_t in state_t.rewards:
                 partialReward += reward_t.getValue()
                 #self.last_reward = reward_t.getValue()
-
-                #why commented out?
 
                 self.accumulative_reward += reward_t.getValue()
                 self.solution_report.addReward(reward_t.getValue(), datetime.datetime.now())
@@ -435,7 +411,7 @@ class AgentSimple:
         self.agent_host.sendCommand(actual_action)
         return actual_action
 
-    
+    # Manhattan distance between goal and current state.
     def heuristic(self, node, goal, grid):
         curr_x = grid[node][0]
         curr_y = grid[node][0]
@@ -443,6 +419,7 @@ class AgentSimple:
         goal_y = goal[1]
         return abs(curr_x - goal_x) + abs(curr_y - goal_y)
     
+    # Translate two nodes into an action value.
     def direction(self, current, chosen):
         if chosen[0] > current[0]:
             return 3
@@ -453,6 +430,7 @@ class AgentSimple:
         if chosen[1] < current[1]:
             return 0
 
+    # Perform A* search and return path.
     def a_star_search(self, grid, transitions, goal, goalCoord, start):
 
         explored = []
@@ -723,7 +701,7 @@ class AgentHelper:
         self.mission_seed = mission_seed
         self.mission_type = mission_type
         self.state_space = StateSpace()
-        self.solution_report = solution_report;   # Python is call by reference !
+        self.solution_report = solution_report;  
         self.solution_report.setMissionType(self.mission_type)
         self.solution_report.setMissionSeed(self.mission_seed)
 
@@ -756,8 +734,7 @@ class AgentHelper:
             time.sleep(1)
 
             #-- Basic map --#
-            state_t = self.agent_host.getWorldState()           # What is the difference between this line with line 544????????????????????
-
+            state_t = self.agent_host.getWorldState()           
 
             if state_t.number_of_observations_since_last_state > 0:
                 msg = state_t.observations[-1].text                 # Get the details for the last observed state
@@ -766,8 +743,8 @@ class AgentHelper:
                 xpos = oracle_and_internal.get(u'XPos', 0)
                 zpos = oracle_and_internal.get(u'ZPos', 0)
                 ypos = oracle_and_internal.get(u'YPos', 0)
-                yaw  = oracle_and_internal.get(u'Yaw', 0)           # What is it???????????????
-                pitch = oracle_and_internal.get(u'Pitch', 0)        # What is it???????????????
+                yaw  = oracle_and_internal.get(u'Yaw', 0)      
+                pitch = oracle_and_internal.get(u'Pitch', 0)        
 
                 #-- Parste the JOSN string, Note there are better ways of doing this! --#
                 full_state_map_raw = str(grid)
@@ -850,29 +827,10 @@ class AgentHelper:
                 self.state_space.goal_id  = state_goal_id
                 self.state_space.goal_loc = loc_goal
         
-                #print(self.state_space.state_locations)
         
-        
-
-            #-- Decide upon removal of this comment/option vvvvv
-            #-- Reward location and values --#
-            # OPTIONAL: If you want to account for the intermediate rewards
-            # in the Random/Simple agent (or in your analysis) you can
-            # obtain ground-truth by teleporting with the tp command
-            # to all states and detect whether you recieve recieve a
-            # diamond or not using the inventory field in the oracle variable
-            #
-            # As default the state_space_rewards is just set to contain
-            # the goal state which is found above.
-            #
+    
             state_space_rewards = {}
             state_space_rewards[state_goal_id] = reward_goal
-
-            # HINT: You can insert your own code for getting
-            # the location of the intermediate rewards
-            # and populate the state_space_rewards dict
-            # with more information (optional).
-            # WARNING: This is a bit tricky, please consult tutors before starting
 
             #-- Set the values in the state_space container --#
             self.state_space.reward_states = state_space_rewards
@@ -916,12 +874,10 @@ if __name__ == "__main__":
     from copy import deepcopy
     import hashlib
 
-#-- Remove duplicate? vv
     import numpy as np
 
     import matplotlib.pyplot as plt
     import matplotlib.image as mpimg
-    #import networkx as nx
     from matplotlib import lines
     from ai import Dqn
 
@@ -1033,8 +989,7 @@ if __name__ == "__main__":
             print("---------------------------------------------\n")
 
 
-            #-- Outputs raw result data in CSV form to text file for each instance for analsysis and graphing
-            ## Mohammed & Jack can you just double check the output works for you
+            # Outputs raw result data in CSV form to text file for each instance for analsysis and graphing
 
             cumulativeRewards.append(solution_report.reward_cumulative)
 
